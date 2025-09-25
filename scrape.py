@@ -5,10 +5,15 @@ import json
 import time
 from supabase import create_client, Client
 
-# url of website to scrape
-url = "https://elpais.com/us/migracion/"
-response = requests.get(url)
-soup = BeautifulSoup(response.text, "lxml")
+# url of website to scrape (keep as input for user to enter)
+url = input("Enter the URL of the website to scrape: ")
+
+if "elpais.com" in url:
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, "lxml")
+else:
+    print("Invalid URL")
+    exit()
 
 articles = []
 
@@ -46,13 +51,15 @@ for a in soup.find_all("a", href=True):
             full_text = None
 
         # Store article data as an object 
-        articles.append({
+        if full_text != None:
+            articles.append({
             "title": title,
             "url": href,
             "date": pub_date,
             "description": description,
             "content": full_text
         })
+
 
         # limit requests rate to avoid spam bolckers (maybe this isnt necessary for every site?)
         time.sleep(1)

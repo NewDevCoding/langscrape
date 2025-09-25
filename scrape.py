@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import re
 import json
 import time
+from supabase import create_client, Client
 
 # url of website to scrape
 url = "https://elpais.com/us/migracion/"
@@ -53,7 +54,7 @@ for a in soup.find_all("a", href=True):
             "content": full_text
         })
 
-        # limit requests rate to avoid spam bolckers
+        # limit requests rate to avoid spam bolckers (maybe this isnt necessary for every site?)
         time.sleep(1)
 
 # Save all articles to JSON
@@ -61,3 +62,21 @@ with open("elpais_articles.json", "w", encoding="utf-8") as f:
     json.dump(articles, f, ensure_ascii=False, indent=2)
 
 print(f"✅ Saved {len(articles)} articles to elpais_articles.json")
+
+
+
+SUPABASE_URL = "https://rujyegyxceihizotfaot.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ1anllZ3l4Y2VpaGl6b3RmYW90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc3NDI4NTUsImV4cCI6MjA3MzMxODg1NX0.7jC8areqL0IplKZ4xUUX2cIrFlWbV9RQBRI5ivxD6xE"
+
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+
+
+
+# Insert articles into Supabase
+for article in articles:
+    try:
+        data, count = supabase.table("articles").upsert(article, on_conflict=["url"]).execute()
+        print(f"✅ Inserted: {article['title']}")
+    except Exception as e:
+        print(f"⚠️ Failed to insert {article['title']}: {e}")
